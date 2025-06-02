@@ -1,21 +1,36 @@
 const range = document.querySelector("#range")
 const valueDisplay = document.querySelector("#value-display")
-
-valueDisplay.textContent = range.value
-
-range.addEventListener("input", () => {
-    valueDisplay.textContent = range.value;
-}
-)
-
 const passwordStrengthText = document.querySelector("#password-strength")
-const checkboxes = document.querySelectorAll("input[type='checkbox']")
+const passwordStrengthBoxes = document.querySelectorAll('#power-box')
+// transform nodelist into array //
+const checkboxes = [...document.querySelectorAll("input[type='checkbox']")];
 const output = document.querySelector("input[readonly]")
 const generateBtn = document.querySelector("button[type='submit']")
-const countChecked = () => [...checkboxes].filter(checkbox => checkbox.checked).length
 const copyBtn = document.querySelector('#copy-btn');
 const tooltip = document.querySelector('#tooltip');
 
+
+// characters groups //
+
+const charGroups = {
+    lowercase: "abcdefghijklmnopqrstuvwxyz",
+    uppercase: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    numbers: "0123456789",
+    symbols: "!@#$%^&*()_+-=[]{}"
+}
+
+
+// display password length //
+
+valueDisplay.textContent = range.value
+range.addEventListener("input", () => {
+    valueDisplay.textContent = range.value;
+});
+
+
+// check how much checkboxes are checked and keep at least one selected //
+
+const countChecked = () => checkboxes.filter(checkbox => checkbox.checked).length
 checkboxes.forEach(checkbox =>
     checkbox.addEventListener('change', () => {
         const checkedList = countChecked()
@@ -26,72 +41,66 @@ checkboxes.forEach(checkbox =>
     )
 )
 
-generateBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const charGroups = {
-        lowercase: "abcdefghijklmnopqrstuvwxyz",
-        uppercase: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-        numbers: "0123456789",
-        symbols: "!@#$%^&*()_+-=[]{}"
-    }
-    let selectedGroups = [];
-    let password = "";
-    checkboxes.forEach(checkbox => {
-        if (checkbox.checked) {
-            const group = charGroups[checkbox.name]
-            if (group) {
-                selectedGroups.push(group)
-                const randomChar = group[Math.floor(Math.random() * group.length)]
-                password += randomChar
-            }
-        }
-    });
-    const passwordLength = range.value
-    while (password.length < passwordLength) {
-        checkboxes.forEach(checkbox => {
-            if (checkbox.checked) {
-                const group = charGroups[checkbox.name]
-                if (group) {
-                    selectedGroups.push(group)
-                    const randomChar = group[Math.floor(Math.random() * group.length)]
-                    password += randomChar
-                }
-            }
-        });
-    }
-    password = password
-        .split('')
-        .sort(() => Math.random() - 0.5)
-        .join('');
-    output.value = password
-    const passwordStrength = getPasswordStrength();
-    updateStrengthBar(passwordStrength);
-})
 
-const getPasswordStrength = () => {
-    const checkedCheckboxes = countChecked()
-    const getLengthStrength = range => {
-        if (range.value < 8) {
-            return 1
-        }
-        else if (range.value < 14) {
-            return 2
-        }
-        else {
-            return 3
-        }
-    }
-    const lengthStrength = getLengthStrength(range);
-    const totalPasswordStrength = checkedCheckboxes + lengthStrength;
-    return totalPasswordStrength
+// function that returns selected characters groups (checkboxes) //
+
+const getSelectedCharGroups = () => {
+    return checkboxes.filter(checkbox => checkbox.checked).map(checkbox => charGroups[checkbox.name]).join('');
+
 }
 
+// generate initial password - meets the checkboxes conditions //
+
+const generateInitialPassword = () => {
+    return checkboxes
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => {
+            const group = charGroups[checkbox.name]
+            return group[Math.floor(Math.random() * group.length)]
+        })
+        .join('')
+}
+
+// generate full password - meets the password length condition //
+
+const generateFullPassword = (currentLength, targetLength, selectedChars) => {
+    let result = "";
+    while (currentLength + result.length < targetLength) {
+        result += selectedChars[Math.floor(Math.random() * selectedChars.length)]
+    }
+    return result
+}
+
+// shuffle characters in password //
+
+const shuffle = (fullPassword) => {
+    return fullPassword.split('').sort(() => Math.random() - 0.5).join('')
+}
+
+
+
+// this function checks the password strength //
+
+const getPasswordStrength = () => {
+    const checkedCheckboxes = countChecked();
+    const lengthValue = range.value;
+
+    let lengthScore = 1;
+    if (lengthValue >= 14) {
+        lengthScore = 3;
+    } else if (lengthValue >= 8) {
+        lengthScore = 2;
+    }
+
+    return checkedCheckboxes + lengthScore;
+}
+
+
+// function that 'paints' strength bar //
+
 const updateStrengthBar = (passwordStrength) => {
-
-    const boxes = document.querySelectorAll('#power-box')
-
     let activeBoxes = 0
-
+    let color = 'bg-red-500';
     if (passwordStrength < 3) {
         activeBoxes = 1
         passwordStrengthText.textContent = 'weak';
@@ -108,32 +117,54 @@ const updateStrengthBar = (passwordStrength) => {
         activeBoxes = 4
         passwordStrengthText.textContent = 'very strong';
     }
-
-    boxes.forEach(box => {
+    passwordStrengthBoxes.forEach(box => {
         box.classList.remove('bg-red-500', 'bg-orange-500', 'bg-green-500');
     });
-
-    let color = 'bg-red-500';
     if (passwordStrength >= 5) color = 'bg-orange-500';
     if (passwordStrength >= 7) color = 'bg-green-500';
-
-    boxes.forEach((box, index) => {
+    passwordStrengthBoxes.forEach((box, index) => {
         if (index < activeBoxes) {
             box.classList.add(color);
         }
     });
 };
 
-copyBtn.addEventListener('click', () => {
-    navigator.clipboard.writeText(output.value).then(() => {
-      tooltip.classList.remove('opacity-0');
-      tooltip.classList.add('opacity-100');
-  
-      setTimeout(() => {
+// display tooltip //
+
+const showTooltip = message => {
+    tooltip.textContent = message;
+    tooltip.classList.remove('opacity-0');
+    tooltip.classList.add('opacity-100');
+
+    setTimeout(() => {
         tooltip.classList.remove('opacity-100');
         tooltip.classList.add('opacity-0');
-      }, 1000);
+    }, 1000);
+}
+
+// copy button functionality //
+
+copyBtn.addEventListener('click', () => {
+    if (!output.value) {
+        showTooltip("No password to copy");
+        return;
+    }
+    navigator.clipboard.writeText(output.value).then(() => {
+        showTooltip("Copied!");
     });
-  });
+});
 
+// button with password generation fuction //
 
+generateBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const selectedChars = getSelectedCharGroups();
+    const initialPassword = generateInitialPassword()
+    const currentLength = initialPassword.length
+    const targetLength = range.value
+    const fullPassword = initialPassword + generateFullPassword(currentLength, targetLength, selectedChars);
+    const password = shuffle(fullPassword)
+    const passwordStrength = getPasswordStrength();
+    output.value = password
+    updateStrengthBar(passwordStrength);
+})

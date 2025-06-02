@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon-32x32.png">
-  <link href="src/style/output.css" rel="stylesheet">
+  <link href="/src/style/output.css" rel="stylesheet">
   <title> Password generator app</title>
 </head>
 
@@ -73,17 +73,17 @@
 
 
     <div id="strength-indicator"
-      class="flex h-16 bg-gray-900 justify-between items-center px-8 py-6 uppercase  text-gray-400">
-      <p class="">Strength</p>
-      <div class="flex gap-4 items-center">
-        <p id="password-strength"></p>
+      class="flex flex-col  bg-gray-900 justify-between items-center px-8 py-4 uppercase gap-2 text-gray-400">
+      <p  id="password-strength" class="">Password Strength</p>
+     
+       
         <div class="flex gap-2 [&>*]:w-5 [&>*]:h-10 [&>*]:border-2 [&>*]:border-gray-400">
           <div id="power-box"></div>
           <div id="power-box"></div>
           <div id="power-box"></div>
           <div id="power-box"></div>
         </div>
-      </div>
+      
 
     </div>
 
